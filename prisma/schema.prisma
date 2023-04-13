@@ -1,0 +1,46 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(uuid())
+  name       String
+  username   String      @unique
+  email      String      @unique
+  password   String
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @default(now()) @map("updated_at")
+  Collection Collection?
+
+  @@map("users")
+}
+
+model Card {
+  id           String
+  quantity     Int
+  addedAt      DateTime   @default(now()) @map("added_at")
+  updatedAt    DateTime   @default(now()) @map("updated_at")
+  collectionId String     @map("collection_id")
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([id, collectionId])
+  @@map("cards")
+}
+
+model Collection {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  isShared  Boolean  @default(false) @map("is_shared")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  cards     Card[]
+
+  @@map("collections")
+}
